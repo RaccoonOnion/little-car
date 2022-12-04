@@ -6,7 +6,7 @@ Authors: Yunxiang Yan, Zixu Huang
 ## 1. Project Timeline
 Mid-DDL: **12.16** Final DDL: **12.28**
 
-- [ ] Play with demo
+- [x] Play with demo
 - [ ] Demand Analysis
 - [ ] Functionality Design
 - [ ] Structure Design
