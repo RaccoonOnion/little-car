@@ -17,7 +17,15 @@ Mid-DDL: **12.16** Final DDL: **12.28**
 ## 2. Demand Analysis
 
 ### (1) Basic
-
+- Power-on and Power-off (button)
+- Throttle (switch)
+- Clutch (switch)
+- Brake (switch) : If we turn on brake and throttle at the same time, brake should work and throttle should not work
+- Reverse gear shift (switch) : When switching this switch, the clutch must keep turning on
+- Turn left and turn right (button) : If no one is pressed or both are pressed, the car should go straight.
+- Car Operation (to UART)
+- Turn Light (LED)
+- Mileage record (7 seg) : the mileage should reset to 0 when power-off
 ### (2) Advanced - Semi-Auto Driving (30%)
 
 - 3 states: moving, turning, wait-for-command
