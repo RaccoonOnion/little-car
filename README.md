@@ -14,3 +14,10 @@ Mid-DDL: **12.16** Final DDL: **12.28**
 - [ ] Verification: module unit test, comprehensive test
 - [ ] On board testing 
 
+## 2. Demand Analysis
+
+### (1) Basic
+
+### (2) Advanced
+
+### (3) Bonus
