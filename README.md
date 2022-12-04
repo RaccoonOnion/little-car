@@ -7,7 +7,7 @@ Authors: Yunxiang Yan, Zixu Huang
 Mid-DDL: **12.16** Final DDL: **12.28**
 
 - [x] Play with demo
-- [ ] Demand Analysis
+- [x] Demand Analysis
 - [ ] Functionality Design
 - [ ] Structure Design
 - [ ] Verilog Coding
