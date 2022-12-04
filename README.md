@@ -8,7 +8,7 @@ Mid-DDL: **12.16** Final DDL: **12.28**
 
 - [x] Play with demo
 - [x] Demand Analysis
-- [ ] Functionality Design
+- [x] Functionality Design
 - [ ] Structure Design
 - [ ] Verilog Coding
 - [ ] Verification: module unit test, comprehensive test
