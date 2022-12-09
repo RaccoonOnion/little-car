@@ -24,8 +24,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports turn_right_signal]
 set_property IOSTANDARD LVCMOS33 [get_ports back_detector]
 set_property IOSTANDARD LVCMOS33 [get_ports front_detector]
 set_property IOSTANDARD LVCMOS33 [get_ports left_detector]
+#??
 set_property IOSTANDARD LVCMOS33 [get_ports move_backward_signal]
 set_property IOSTANDARD LVCMOS33 [get_ports move_forward_signal]
+
 set_property IOSTANDARD LVCMOS33 [get_ports right_detector]
 
 set_property PACKAGE_PIN R3 [get_ports place_barrier_signal]
