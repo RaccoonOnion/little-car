@@ -26,8 +26,7 @@ module SimulatedDevice(
     output tx, //bind to T4 pin
     
     input rst_n,
-    input power_on_signal,
-    input power_off_signal,
+    input power_on_signal,power_off_signal,
     output reg poweron,
     output reg poweroff,
     
@@ -50,7 +49,7 @@ module SimulatedDevice(
         if(~rst_n)
         begin
             state <= power_off;
-         end
+        end
          else
             state <= next_state;
     end
@@ -59,12 +58,13 @@ module SimulatedDevice(
     always @(state,power_on_signal,power_off_signal) begin
         case(state)
         power_off: if(power_on_signal) next_state <= power_on; else next_state <= power_off;
-        power_on: 
+        power_on: begin
             if(power_off_signal) next_state <= power_off;
             else begin
 //                {next_state,turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {power_on,turn_left_signal,turn_right_signal,move_forward_signal,move_backward_signal,place_barrier_signal,destroy_barrier_signal};
                    next_state <= power_on;
             end
+        end
         endcase
     end
     
