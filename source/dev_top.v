@@ -27,8 +27,8 @@ module SimulatedDevice(
     
     input rst_n,
     input power_on_signal,power_off_signal,
-    output reg poweron,
-    output reg poweroff,
+    input manual_driving_signal,
+    output reg [3:0] state_led,
     
     input turn_left_signal,
     input turn_right_signal,
@@ -43,60 +43,55 @@ module SimulatedDevice(
     );
     reg[3:0] state,next_state;
     reg turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier;
-    
-    parameter power_off = 4'b0000, power_on = 4'b0001;
+    wire power_on_1sec;
+    parameter power_off = 4'b0000, power_on = 4'b0001, manual_driving = 4'b0010;
     
     always @(posedge sys_clk, negedge rst_n) begin
         if(~rst_n)
         begin
             state <= power_off;
-        end
+         end
          else
             state <= next_state;
     end
     
-//    state,turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier, power_on_signal,power_off_signal
-    always @(state,power_on_signal,power_off_signal) begin
+    always @(state,power_on_1sec,power_off_signal) begin
         case(state)
-        power_off: if(power_on_signal) next_state <= power_on; else next_state <= power_off;
+        power_off: if(power_on_1sec) next_state <= power_on; else next_state <= power_off;
         power_on: begin
             if(power_off_signal) next_state <= power_off;
-            else begin
-//                {next_state,turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {power_on,turn_left_signal,turn_right_signal,move_forward_signal,move_backward_signal,place_barrier_signal,destroy_barrier_signal};
-                   next_state <= power_on;
-            end
+            else if(manual_driving_signal) next_state <= manual_driving;
+            else next_state <= power_on;
         end
+        manual_driving: next_state <= manual_driving;
         endcase
     end
     
     always @(posedge sys_clk, negedge rst_n) begin
-            if(~rst_n)
-            begin
-                turn_left <= 1'b0;
-                turn_right <= 1'b0;
-                move_forward <= 1'b0;
-                move_backward <= 1'b0;
-                place_barrier <= 1'b0;
-                destroy_barrier <= 1'b0;
-             end
-             else begin
-             case(state)
-                power_on: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,move_forward_signal,move_backward_signal,place_barrier_signal,destroy_barrier_signal};
-                power_off: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;    
-             endcase
-             end
+        if(~rst_n)
+        begin
+            turn_left <= 1'b0;
+            turn_right <= 1'b0;
+            move_forward <= 1'b0;
+            move_backward <= 1'b0;
+            place_barrier <= 1'b0;
+            destroy_barrier <= 1'b0;
         end
-    
+        else begin
+            case(state)
+            power_on: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
+            power_off: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
+            manual_driving: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,move_forward_signal,move_backward_signal,place_barrier_signal,destroy_barrier_signal};    
+            endcase
+        end
+    end
     
     always@(negedge sys_clk) begin
-        if(state == power_on) begin
-            poweron <= 1'b1;
-            poweroff <= 1'b0;
-        end
-        if(state == power_off) begin
-            poweron <= 1'b0;
-            poweroff <= 1'b1;
-        end
+        case(state)
+        power_off: state_led <= power_off;
+        power_on: state_led <= power_on;
+        manual_driving: state_led <= manual_driving;
+        endcase
     end
     
     wire [7:0] in = {2'b10, destroy_barrier, place_barrier, turn_right, turn_left, move_backward, move_forward};
@@ -106,6 +101,8 @@ module SimulatedDevice(
     assign back_detector = rec[1];
     assign left_detector = rec[2];
     assign right_detector = rec[3];
+    
+    power_on_judge poj(sys_clk, rst_n, power_on_signal, power_on_1sec);
     
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx));
     
