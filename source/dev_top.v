@@ -44,6 +44,7 @@ module SimulatedDevice(
     reg[3:0] state,next_state;
     reg turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier;
     wire power_on_1sec;
+    wire clk_ms,clk_20ms,clk_16x,clk_x;
     parameter power_off = 4'b0000, power_on = 4'b0001, manual_driving = 4'b0010;
     
     always @(posedge sys_clk, negedge rst_n) begin
@@ -102,8 +103,16 @@ module SimulatedDevice(
     assign left_detector = rec[2];
     assign right_detector = rec[3];
     
-    power_on_judge poj(sys_clk, rst_n, power_on_signal, power_on_1sec);
+    power_on_judge poj(clk_20ms, rst_n, power_on_signal, power_on_1sec);
     
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx));
+
+    divclk my_divclk(
+        .clk(sys_clk),
+        .clk_ms(clk_ms),
+        .btnclk(clk_20ms),
+        .clk_16x(clk_16x),
+        .clk_x(clk_x)
+    );
     
 endmodule
