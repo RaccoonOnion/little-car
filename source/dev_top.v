@@ -55,6 +55,7 @@ module SimulatedDevice(
     reg[3:0] state, next_state;
     reg turn_left, turn_right, move_forward, move_backward, place_barrier, destroy_barrier;
     wire power_on_1sec; // power on for 1s
+    wire reverse_change; // switch reverse without clutch
     wire clk_ms, clk_20ms, clk_16x, clk_x; // clock division
 
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100; // more states TODO!!
@@ -90,14 +91,18 @@ module SimulatedDevice(
         end
         moving: // moving state
         begin
-            casex ({throttle_signal, brake_signal, reverse_signal, clutch_signal})
-                4'bxx10: next_state = power_off;
-                4'bx100, 4'bx101, 4'bx111: next_state = not_starting;
-                4'bx0x1, 4'b0000: next_state = starting;
+        if (reverse_change & ~clutch_signal)
+            next_state = power_off;
+        else
+            begin
+            casex ({throttle_signal, brake_signal, clutch_signal})
+                3'bx1x: next_state = not_starting;
+                3'bx01, 3'b00x: next_state = starting;
                 default: next_state = moving;
             endcase
+            end
         end
-
+        
         default: next_state = next_state; // TODO!!
         endcase
     end
@@ -123,18 +128,15 @@ module SimulatedDevice(
             power_on: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
             power_off: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
             not_starting: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
-            starting: 
-            begin
-            if (reverse_signal)
-                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b0,1'b1,place_barrier_signal,destroy_barrier_signal}; 
-            else
-                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
-            end
-            
+            starting: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
+           
             moving: 
             begin
-            {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b1,1'b0,place_barrier_signal,destroy_barrier_signal}; 
-            end   
+            if (!reverse_signal)
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b1,1'b0,place_barrier_signal,destroy_barrier_signal};
+            else
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b0,1'b1,place_barrier_signal,destroy_barrier_signal}; 
+            end
             endcase
         end
     end
@@ -157,7 +159,7 @@ module SimulatedDevice(
     assign right_detector = rec[3];
     
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
-    
+    edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
 
     divclk my_divclk( // clock division
