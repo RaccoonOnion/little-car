@@ -43,6 +43,7 @@ module SimulatedDevice(
     );
     reg[3:0] state,next_state;
     reg turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier;
+    
     parameter power_off = 4'b0000, power_on = 4'b0001;
     
     always @(posedge sys_clk, negedge rst_n) begin
