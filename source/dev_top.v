@@ -50,13 +50,16 @@ module SimulatedDevice(
     output reg left_turn_led,
     output reg right_turn_led,
     output reg reverse_led
+//    output reg [7:0] seg_sel,
+//    output reg [7:0] seg_out1,
+//    output reg [7:0] seg_out2
     );
 
     reg[3:0] state, next_state;
     reg turn_left, turn_right, move_forward, move_backward, place_barrier, destroy_barrier;
     wire power_on_1sec; // power on for 1s
     wire reverse_change; // switch reverse without clutch
-    wire clk_ms, clk_20ms, clk_16x, clk_x; // clock division
+    wire clk_ms, clk_20ms, clk_s; // clock division
 
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100; // more states TODO!!
     
@@ -76,7 +79,7 @@ module SimulatedDevice(
         begin
             casex ({throttle_signal, brake_signal, clutch_signal})
                 3'b101: next_state = starting;
-                3'b1x0: next_state = power_off;
+                3'b100: next_state = power_off;
                 default: next_state = not_starting;
             endcase
         end
@@ -144,11 +147,13 @@ module SimulatedDevice(
     always@(*) // Output Combinational Logic
     begin
         state_led = state;
-        left_turn_led = turn_left_signal;
+        left_turn_led = turn_left_signal;  // turn led to improve
         right_turn_led = turn_right_signal;
         reverse_led = reverse_signal;
         // Milage led output TODO!!
     end
+    
+    reg [26:0] seg_cnt;
     
     wire [7:0] in = {2'b10, destroy_barrier, place_barrier, turn_right, turn_left, move_backward, move_forward};
 
@@ -158,16 +163,10 @@ module SimulatedDevice(
     assign left_detector = rec[2];
     assign right_detector = rec[3];
     
+    clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_s(clk_s)); // clock division
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
-    uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
-
-    divclk my_divclk( // clock division
-        .clk(sys_clk),
-        .clk_ms(clk_ms),
-        .btnclk(clk_20ms),
-        .clk_16x(clk_16x),
-        .clk_x(clk_x)
-    );
     
+    uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
+   
 endmodule
