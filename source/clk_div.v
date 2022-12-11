@@ -23,12 +23,13 @@
 module clk_div(
     input  clk,
     input  rst_n,
-    output reg  clk_ms, clk_20ms, clk_s
+    output reg  clk_ms, clk_20ms, clk_100ms, clk_s
     );
-    parameter period_ms = 100000, period_20ms = 2000000, period_s = 100000000;  
+    parameter period_ms = 100000, period_20ms = 2000000, period_100ms = 10000000, period_s = 100000000;  
      
     reg [31:0]  cnt_ms;
     reg [31:0]  cnt_20ms;
+    reg [31:0]  cnt_100ms;
     reg [31:0]  cnt_s;
      
     always @ (posedge clk or negedge rst_n) 
@@ -84,4 +85,22 @@ module clk_div(
                 cnt_s <= cnt_s + 1;
             end
         end
+        
+     always @ (posedge clk or negedge rst_n) 
+            begin
+                if(~rst_n) 
+                begin
+                    cnt_100ms <= 0;
+                    clk_100ms <= 0;   
+                end
+                else 
+                begin
+                    if(cnt_100ms == ((period_100ms >> 1) - 1)) begin
+                      clk_100ms <= ~clk_100ms;
+                      cnt_100ms <= 0;
+                    end
+                else
+                    cnt_100ms <= cnt_100ms + 1;
+                end
+            end
 endmodule

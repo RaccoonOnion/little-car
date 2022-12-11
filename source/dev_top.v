@@ -49,18 +49,18 @@ module SimulatedDevice(
     output reg [3:0] state_led,
     output reg left_turn_led,
     output reg right_turn_led,
-    output reg reverse_led
-//    output reg [7:0] seg_sel,
-//    output reg [7:0] seg_out1,
-//    output reg [7:0] seg_out2
+    output reg reverse_led,
+    output [7:0] seg_en,
+    output [7:0] seg_out0,
+    output [7:0] seg_out1
     );
 
     reg[3:0] state, next_state;
     reg turn_left, turn_right, move_forward, move_backward, place_barrier, destroy_barrier;
     wire power_on_1sec; // power on for 1s
     wire reverse_change; // switch reverse without clutch
-    wire clk_ms, clk_20ms, clk_s; // clock division
-
+    wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
+    
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100; // more states TODO!!
     
     always @(*) begin //  Next State Combinational Logic TODO!! add power_off
@@ -153,7 +153,6 @@ module SimulatedDevice(
         // Milage led output TODO!!
     end
     
-    reg [26:0] seg_cnt;
     
     wire [7:0] in = {2'b10, destroy_barrier, place_barrier, turn_right, turn_left, move_backward, move_forward};
 
@@ -163,7 +162,8 @@ module SimulatedDevice(
     assign left_detector = rec[2];
     assign right_detector = rec[3];
     
-    clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_s(clk_s)); // clock division
+    seg s(clk_ms, clk_100ms, rst, state, seg_en, seg_out0, seg_out1); //seg 
+    clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_100ms(clk_100ms), .clk_s(clk_s)); // clock division
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
     

@@ -37,7 +37,7 @@ module power_on_judge(
         else begin
             if(power_on_signal) cnt <= cnt + 1'b1;
             else cnt <= 6'b0;
-            if(cnt >= 6'b110010) power_on <= 1'b1;
+            if(cnt >= 6'd49) power_on <= 1'b1;
             else power_on <= 1'b0;
         end
     end
