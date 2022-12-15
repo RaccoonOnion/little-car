@@ -158,9 +158,9 @@ module SimulatedDevice(
 
     wire [7:0] rec;
     assign front_detector = rec[0];
-    assign back_detector = rec[1];
-    assign left_detector = rec[2];
-    assign right_detector = rec[3];
+    assign left_detector = rec[1];
+    assign right_detector = rec[2];
+    assign back_detector = rec[3];
     
     seg s(clk_ms, clk_100ms, rst, state, seg_en, seg_out0, seg_out1); //seg 
     clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_100ms(clk_100ms), .clk_s(clk_s)); // clock division
