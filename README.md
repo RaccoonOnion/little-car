@@ -4,15 +4,17 @@ This is the final porject for CS207 Digital Logic
 Authors: Yunxiang Yan, Zixu Huang
 
 ## 1. Project Timeline
-Mid-DDL: **12.16** Final DDL: **12.28**
+Mid-DDL: **12.15** Final DDL: **12.28**
 
 - [x] Play with demo
 - [x] Demand Analysis
 - [x] Functionality Design
-- [ ] Structure Design
-- [ ] Verilog Coding
-- [ ] Verification: module unit test, comprehensive test
-- [ ] On board testing 
+- [x] Structure Design
+- [x] Coding: Global State (20%)
+- [x] Coding: Manual Driving (50%)
+- [ ] Coding: Semi-Auto Driving (30%)
+- [ ] Bonus: Auto Driving (+20%)
+- [ ] Bonus: VGA (+20%)
 
 ## 2. Demand Analysis
 
