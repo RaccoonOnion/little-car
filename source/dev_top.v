@@ -150,7 +150,6 @@ module SimulatedDevice(
         left_turn_led = turn_left_signal;  // turn led to improve
         right_turn_led = turn_right_signal;
         reverse_led = reverse_signal;
-        // Milage led output TODO!!
     end
     
     

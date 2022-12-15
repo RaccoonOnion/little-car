@@ -21,7 +21,7 @@
 
 
 module clk_div(
-    input  clk,
+    input  clk,// 100MHz
     input  rst_n,
     output reg  clk_ms, clk_20ms, clk_100ms, clk_s
     );
