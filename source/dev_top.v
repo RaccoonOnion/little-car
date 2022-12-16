@@ -150,26 +150,30 @@ module SimulatedDevice(
         state_led = state;
         case(state)
         not_starting: 
-        {
+        begin
             left_turn_led = 1'b1; 
             right_turn_led = 1'b1;
-        }
+            reverse_led = 1'b0;
+        end
         starting:
-        {
+        begin
+            left_turn_led = 1'b0; 
+            right_turn_led = 1'b0;
             reverse_led = reverse_signal;
-        }
+        end
         moving:
-        {
+        begin
             left_turn_led = turn_left_signal;  // change to flash later
             right_turn_led = turn_right_signal;
             reverse_led = reverse_signal;
-        }
+        end
         default:
-        {
+        begin
             left_turn_led = 1'b0;  
             right_turn_led = 1'b0;
             reverse_led = 1'b0;
-        }
+        end
+        endcase
         
     end
     
