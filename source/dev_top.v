@@ -60,6 +60,7 @@ module SimulatedDevice(
     wire power_on_1sec; // power on for 1s
     wire reverse_change; // switch reverse without clutch
     wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
+    wire flash_led; // flashing led light
     
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100; // more states TODO!!
     
@@ -163,8 +164,21 @@ module SimulatedDevice(
         end
         moving:
         begin
-            left_turn_led = turn_left_signal;  // change to flash later
-            right_turn_led = turn_right_signal;
+            if (turn_left_signal && ~turn_right_signal)
+            begin
+                left_turn_led = flash_led;
+                right_turn_led = 1'b0;
+            end
+            else if (~turn_left_signal && turn_right_signal)
+            begin
+                left_turn_led = 1'b0;
+                right_turn_led = flash_led;
+            end
+            else
+            begin
+                left_turn_led = 1'b0;  
+                right_turn_led = 1'b0;            
+            end         
             reverse_led = reverse_signal;
         end
         default:
@@ -190,7 +204,7 @@ module SimulatedDevice(
     clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_100ms(clk_100ms), .clk_s(clk_s)); // clock division
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
-    
+    flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
    
 endmodule
