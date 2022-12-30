@@ -4,7 +4,7 @@ This is the final porject for CS207 Digital Logic
 Authors: Yunxiang Yan, Zixu Huang
 
 ## 1. Project Timeline
-Mid-DDL: **12.15** Final DDL: **12.28**
+Mid-DDL: **12.15** Final DDL: **1.8**
 
 - [x] Play with demo
 - [x] Demand Analysis
@@ -15,6 +15,8 @@ Mid-DDL: **12.15** Final DDL: **12.28**
 - [ ] Coding: Semi-Auto Driving (30%)
 - [ ] Bonus: Auto Driving (+20%)
 - [ ] Bonus: VGA (+20%)
+- [ ] Report
+- [ ] Demo video
 
 ## 2. Demand Analysis
 
