@@ -114,7 +114,7 @@ module SimulatedDevice(
         end
         sauto_moving:
         begin
-            if (fork_here)
+            if (detect_fork)
             begin
                 next_state = sauto_waiting;
             end
@@ -253,6 +253,7 @@ module SimulatedDevice(
         sauto_turning:
         begin
         end
+        
         default:
         begin
             left_turn_led = 1'b0;  
@@ -278,6 +279,7 @@ module SimulatedDevice(
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
     flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
     detect_fork df1(clk_100ms, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
+    edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork) );
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
    
 endmodule
