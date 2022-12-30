@@ -43,5 +43,6 @@ Mid-DDL: **12.15** Final DDL: **1.8**
 - use **time** to estimate 90 degrees, provide a 50Hz clk
 - add a cooldown between turning and going straight, cuz the car takes a short time to calibrate the orientation
 - **the value of 4 detectors may not change at the same time (time difference of about 40ms)**  
+- 死路，只有后面空
 
 ### (3) Bonus
