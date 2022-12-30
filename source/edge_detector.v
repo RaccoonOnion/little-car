@@ -24,13 +24,13 @@ module edge_detector(
     input clk,
     input rst_n,
     input signal,
-//    output raising_edge_detect, falling_edge_detect, 
+    output raising_edge_detect, falling_edge_detect, 
     output double_edge_detect
     );
 
 reg q0, q1;
-//assign raising_edge_detect = q0 & (~q1);
-//assign falling_edge_detect = ~q0 & q1;
+assign raising_edge_detect = q0 & (~q1);
+assign falling_edge_detect = ~q0 & q1;
 assign double_edge_detect = q0 ^ q1;
 
 always@(posedge clk, negedge rst_n)
