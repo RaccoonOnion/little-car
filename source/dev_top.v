@@ -66,6 +66,9 @@ module SimulatedDevice(
     wire flash_led; // flashing led light
     wire detect_fork; // detecting fork road
     wire finish_turning; // finish turning signal 
+    reg sauto_is_turning; // turning flag
+    wire sauto_turn;
+    wire sauto_finish_turning;
     
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111;// more states TODO!!
     
@@ -183,10 +186,21 @@ module SimulatedDevice(
             else
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b0,1'b1,place_barrier_signal,destroy_barrier_signal}; 
             end
-            
+            //{front_detector,back_detector,left_detector, right_detector}
             sauto_moving:
+            if (~front_detector && sauto_finish_turning)
             begin
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,1'b0,1'b1,1'b0,1'b0,1'b0};
+            end
+            else if (~left_detector && sauto_finish_turning)
+            begin
+                sauto_is_turning <= 1'b1;
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {sauto_turn,1'b0,1'b0,1'b0,1'b0,1'b0};
+            end
+            else if (~right_detector && sauto_finish_turning)
+            begin
+                sauto_is_turning <= 1'b1;
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,sauto_turn,1'b0,1'b0,1'b0,1'b0};
             end
             
             sauto_waiting:
@@ -280,6 +294,7 @@ module SimulatedDevice(
     flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
     detect_fork df1(clk_100ms, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
     edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork) );
+    auto_turning at1(.clk_ms(clk_ms), .rst_n(rst), .is_turning(sauto_is_turning), .turning(sauto_turn), .finish_turning(sauto_finish_turning));
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
    
 endmodule
