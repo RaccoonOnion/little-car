@@ -64,11 +64,13 @@ module SimulatedDevice(
     wire reverse_change; // switch reverse without clutch
     wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
     wire flash_led; // flashing led light
-    wire detect_fork; // detecting fork road
+    wire detect_fork_appear; // detecting fork road
+    wire detect_fork_disappear;
     wire finish_turning; // finish turning signal 
-    reg sauto_is_turning; // turning flag
-    wire sauto_turn;
-    wire sauto_finish_turning;
+    reg is_turning, left_right;
+    wire turn_l,turn_r;
+    reg just_turned;
+
     
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111;// more states TODO!!
     
@@ -115,9 +117,14 @@ module SimulatedDevice(
             endcase
             end
         end
+        
         sauto_moving:
         begin
-            if (detect_fork)
+            if(detect_fork_disappear)
+            begin
+                just_turned = 1'b0;
+            end
+            else if (~just_turned && detect_fork_appear)
             begin
                 next_state = sauto_waiting;
             end
@@ -126,29 +133,39 @@ module SimulatedDevice(
                 next_state = sauto_moving;
             end
         end
+        
         sauto_waiting:
         begin
             if (move_forward_signal)
             begin
                 next_state = sauto_moving;
             end
-            else if(turn_left_signal || turn_right_signal)
+            else if(turn_left_signal)
             begin
+                left_right = 1'b0;
                 next_state = sauto_turning;
+            end
+            else if(turn_right_signal)
+            begin
+                left_right = 1'b1;
+                next_state = sauto_turning; 
             end
             else
             begin
                 next_state = sauto_waiting;
             end
         end
+        
         sauto_turning:
-        begin
+        begin       
             if (finish_turning)
             begin
                  next_state = sauto_moving;
+                 just_turned = 1'b1;
             end
             else
             begin
+                next_state = sauto_turning;
             end
         end
         default: next_state = next_state; // TODO!!
@@ -172,6 +189,10 @@ module SimulatedDevice(
         else 
         begin
             state <= next_state;
+            
+//            if(state == sauto_turning) is_turning <= 1'b1;
+//            else is_turning <= 1'b0;
+            
             case(state)
             // combine
             power_on: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
@@ -186,21 +207,10 @@ module SimulatedDevice(
             else
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b0,1'b1,place_barrier_signal,destroy_barrier_signal}; 
             end
-            //{front_detector,back_detector,left_detector, right_detector}
+            
             sauto_moving:
-            if (~front_detector && sauto_finish_turning)
             begin
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,1'b0,1'b1,1'b0,1'b0,1'b0};
-            end
-            else if (~left_detector && sauto_finish_turning)
-            begin
-                sauto_is_turning <= 1'b1;
-                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {sauto_turn,1'b0,1'b0,1'b0,1'b0,1'b0};
-            end
-            else if (~right_detector && sauto_finish_turning)
-            begin
-                sauto_is_turning <= 1'b1;
-                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,sauto_turn,1'b0,1'b0,1'b0,1'b0};
             end
             
             sauto_waiting:
@@ -210,7 +220,7 @@ module SimulatedDevice(
             
             sauto_turning:
             begin
-            // write here
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_l, turn_r, 1'b0,1'b0,1'b0,1'b0};
             end
             
             endcase
@@ -267,7 +277,6 @@ module SimulatedDevice(
         sauto_turning:
         begin
         end
-        
         default:
         begin
             left_turn_led = 1'b0;  
@@ -293,8 +302,11 @@ module SimulatedDevice(
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
     flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
     detect_fork df1(clk_100ms, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
-    edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork) );
-    auto_turning at1(.clk_ms(clk_ms), .rst_n(rst), .is_turning(sauto_is_turning), .turning(sauto_turn), .finish_turning(sauto_finish_turning));
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
-   
+    
+    auto_turning at (clk_ms, rst, state, left_right, turn_l, turn_r, finish_turning);
+    //detect_fork_appear
+    edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork_appear) );
+    // detect_fork_disappear
+    edge_detector ed3(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .falling_edge_detect(detect_fork_disappear) );
 endmodule
