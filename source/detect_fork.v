@@ -34,8 +34,8 @@ module detect_fork(
         end
         else
         begin
-        case (detector_signal)
-            4'b0001, 4'b0010, 4'b1000, 4'b0000:
+        casex (detector_signal)
+            4'b0x01, 4'b0x10, 4'b1x00, 4'b0x00:
             begin
             detect_fork <= 1'b1;
             end
