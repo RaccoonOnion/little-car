@@ -55,8 +55,7 @@ module SimulatedDevice(
     output [7:0] seg_en,
     output [7:0] seg_out0,
     output [7:0] seg_out1,
-    output fork_here,
-    output finish_turning
+    output fork_here
     );
 
     reg[3:0] state, next_state;
@@ -66,7 +65,7 @@ module SimulatedDevice(
     wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
     wire flash_led; // flashing led light
     wire detect_fork; // detecting fork road
-//    wire finish_turning; // finish turning signal 
+    wire finish_turning; // finish turning signal 
     reg is_turning, left_right;
     wire turn_l,turn_r;
     
