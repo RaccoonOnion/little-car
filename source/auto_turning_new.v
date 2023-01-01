@@ -23,31 +23,63 @@
 module auto_turning(
     input  clk_ms,
     input  rst_n,
-    input is_turning,
-    output reg turning,
+    input [3:0] state,
+    input  left_right,
+    output reg turn_left,
+    output reg turn_right,
     output reg finish_turning
     );
-    reg[9:0] cnt;
+    reg[11:0] cnt;
+    reg is_turning;
+    
+    always @(*)
+    begin
+        if(state == 4'b0111 || state == 4'b1001) is_turning = 1'b1;
+        else is_turning = 1'b0;
+    end
+    
     always @ (posedge clk_ms or negedge rst_n) 
         begin
             if(~rst_n) 
             begin
-                turning <= 1'b0; 
-                cnt <= 10'b0;
-                finish_turning <= 1'b1; 
+                turn_left <= 1'b0;
+                turn_right <= 1'b0;
+                cnt <= 12'b0;
+                finish_turning <= 1'b0; 
             end
+            else if(~is_turning) 
+                        begin
+                            turn_left <= 1'b0;
+                            turn_right <= 1'b0;
+                            cnt <= 12'b0;
+                            finish_turning <= 1'b0; 
+                        end
             else if (is_turning)
-            begin
-                finish_turning <= 1'b0;
-                if(cnt <= 10'd750)
-                begin
-                    cnt <= cnt + 1'b1;
-                    turning <= 1'b1; 
-                end
-                else
-                    turning <= 1'b0;
-                    finish_turning <= 1'b1;  
-                    cnt <= 10'b0;
+                            begin
+                                if(cnt <= 12'd1000)
+                                begin
+                                    cnt <= cnt + 1'b1;
+                                    if(cnt <= 12'd750)
+                                    begin        
+                                        if(~left_right) begin
+                                            turn_left <= 1'b1;
+                                            turn_right <= 1'b0;
+                                        end
+                                        else begin
+                                            turn_left <= 1'b0;
+                                            turn_right <= 1'b1;
+                                        end
+                                    end
+                                    else 
+                                    begin
+                                        turn_left <= 1'b0;
+                                        turn_right <= 1'b0;
+                                    end
+                                end
+                                else
+                                begin
+                                    finish_turning <= 1'b1; 
+                                end  
             end
         end
 endmodule
