@@ -66,19 +66,37 @@ module SimulatedDevice(
     wire flash_led; // flashing led light
     wire detect_fork_appear; // detecting fork road
     wire detect_fork_disappear;
+    wire detect_front_appear;
+    wire detect_front_disappear;
     wire finish_turning; // finish turning signal 
     reg is_turning, left_right;
     wire turn_l,turn_r;
     reg just_turned;
+    reg cant_forward; // useless
+    wire left_detect_on_1s;
+    wire right_detect_on_1s;
+    wire left_detect_off_1s;
+    wire right_detect_off_1s;
+    wire front_detect_on_005s;
+    wire front_detect_off_1s;
+    reg start_detect;
 
     
-    parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111;// more states TODO!!
+    parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// more states TODO!!
     
     always @(*) begin //  Next State Combinational Logic TODO!! add power_off
         case(state)
         power_off: // power off state
         begin
-            if(power_on_1sec) next_state = power_on; else next_state = power_off;
+            if(power_on_1sec)
+            begin
+                start_detect = 1'b0;
+                cant_forward = 1'b0;
+                just_turned = 1'b0;
+                next_state = power_on; 
+            end
+            else 
+            next_state = power_off;
         end
         power_on: // power on state
         begin
@@ -128,6 +146,11 @@ module SimulatedDevice(
             begin
                 next_state = sauto_waiting;
             end
+            else if (~detect_fork_appear && front_detect_on_005s)
+            begin
+                cant_forward = 1'b1;
+                next_state = sauto_self_checking;
+            end
             else
             begin
                 next_state = sauto_moving;
@@ -168,6 +191,68 @@ module SimulatedDevice(
                 next_state = sauto_turning;
             end
         end
+        
+        sauto_self_checking:
+        begin
+            if (left_detect_off_1s && right_detect_on_1s)
+            begin
+                start_detect = 1'b0;
+                left_right = 1'b0;
+                next_state = sauto_self_turning;
+            end
+            else if (left_detect_on_1s && right_detect_off_1s)
+            begin
+                start_detect = 1'b0;
+                left_right = 1'b1;
+                next_state = sauto_self_turning;
+            end
+            else if (left_detect_off_1s && right_detect_off_1s)
+            begin
+                start_detect = 1'b0;
+                next_state = sauto_moving;
+            end
+            else if (left_detect_on_1s && right_detect_on_1s) // dead end
+            begin
+                start_detect = 1'b0;
+                left_right = 1'b0;
+                next_state = sauto_self_turning;                
+            end
+            else if (~(left_detect_on_1s || left_detect_off_1s) || ~(right_detect_on_1s || right_detect_off_1s))
+            begin
+                start_detect = 1'b1;
+                next_state = sauto_self_checking; 
+            end
+            else
+            begin
+                start_detect = 1'b0;
+                next_state = sauto_self_checking;
+            end
+        end
+        
+        sauto_self_turning:
+        begin
+//            if (detect_front_disappear)
+//            begin
+//                cant_forward = 1'b0;
+//            end
+//            else
+//            begin
+//                cant_forward = cant_forward;
+//            end
+            if (finish_turning && front_detect_off_1s)
+            begin
+                start_detect = 1'b0;
+                cant_forward = 1'b0;
+                next_state = sauto_moving;
+            end
+            else
+            begin
+                cant_forward = cant_forward;
+                start_detect = 1'b1;
+                next_state = sauto_self_turning;
+            end
+        end
+        
         default: next_state = next_state; // TODO!!
         endcase
     end
@@ -218,10 +303,15 @@ module SimulatedDevice(
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,1'b0,1'b0,1'b0,1'b0,1'b0};
             end
             
-            sauto_turning:
+            sauto_turning, sauto_self_turning:
             begin
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_l, turn_r, 1'b0,1'b0,1'b0,1'b0};
             end
+            
+            sauto_self_checking:
+            begin
+                {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0, 1'b0, 1'b0,1'b0,1'b0,1'b0};
+            end            
             
             endcase
         end
@@ -301,7 +391,7 @@ module SimulatedDevice(
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
     edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
     flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
-    detect_fork df1(clk_100ms, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
+    detect_fork df1(sys_clk, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
     
     auto_turning at (clk_ms, rst, state, left_right, turn_l, turn_r, finish_turning);
@@ -309,4 +399,16 @@ module SimulatedDevice(
     edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork_appear) );
     // detect_fork_disappear
     edge_detector ed3(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .falling_edge_detect(detect_fork_disappear) );
+    //detect_front_appear
+    delayed_edge_detector ed4(.clk(clk_ms), .rst_n(rst), .signal(front_detector), .raising_edge_detect(detect_front_appear) );
+    delayed_edge_detector ed5(.clk(clk_ms), .rst_n(rst), .signal(front_detector), .falling_edge_detect(detect_front_disappear) );
+    
+    barrier_detect left_on(clk_20ms, rst, start_detect, left_detector, left_detect_on_1s); // left detect 1 sec
+    barrier_detect right_on(clk_20ms, rst, start_detect, right_detector, right_detect_on_1s); // right detect 1 sec
+    
+    no_barrier_detect left_off(clk_20ms, rst,start_detect, left_detector, left_detect_off_1s); // left detect 1 sec
+    no_barrier_detect right_off(clk_20ms, rst,start_detect, right_detector, right_detect_off_1s); // right detect 1 sec
+    
+    power_on_judge front_judge(clk_ms, rst, front_detector, front_detect_on_005s); // front detect 0.05 sec
+    no_barrier_detect front_off(clk_20ms, rst,start_detect, front_detector, front_detect_off_1s); // right detect 1 sec
 endmodule
