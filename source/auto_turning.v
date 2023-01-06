@@ -24,7 +24,8 @@ module auto_turning(
     input  clk_ms,
     input  rst_n,
     input [3:0] state,
-    input left_right,
+    input  left_right,
+    input  turn_around,
     output reg turn_left,
     output reg turn_right,
     output reg finish_turning
@@ -34,7 +35,7 @@ module auto_turning(
     
     always @(*)
     begin
-        if(state == 4'b0111) is_turning = 1'b1;
+        if(state == 4'b0111 || state == 4'b1001) is_turning = 1'b1;
         else is_turning = 1'b0;
     end
     
@@ -55,31 +56,61 @@ module auto_turning(
                             finish_turning <= 1'b0; 
                         end
             else if (is_turning)
-                            begin
-                                if(cnt <= 12'd1000)
-                                begin
-                                    cnt <= cnt + 1'b1;
-                                    if(cnt <= 12'd750)
-                                    begin        
-                                        if(~left_right) begin
-                                            turn_left <= 1'b1;
-                                            turn_right <= 1'b0;
-                                        end
-                                        else begin
-                                            turn_left <= 1'b0;
-                                            turn_right <= 1'b1;
-                                        end
-                                    end
-                                    else 
-                                    begin
-                                        turn_left <= 1'b0;
-                                        turn_right <= 1'b0;
-                                    end
+                begin
+                    if(turn_around)
+                    begin
+                        if(cnt <= 12'd2000)
+                        begin
+                            cnt <= cnt + 1'b1;
+                            if(cnt <= 12'd1700)
+                            begin        
+                                if(~left_right) begin
+                                    turn_left <= 1'b1;
+                                    turn_right <= 1'b0;
                                 end
-                                else
-                                begin
-                                    finish_turning <= 1'b1; 
-                                end  
+                                else begin
+                                    turn_left <= 1'b0;
+                                    turn_right <= 1'b1;
+                                end
+                            end
+                            else 
+                            begin
+                                turn_left <= 1'b0;
+                                turn_right <= 1'b0;
+                            end
+                        end
+                        else
+                        begin
+                            finish_turning <= 1'b1; 
+                        end               
+                    end
+                    else if(~turn_around)
+                    begin
+                        if(cnt <= 12'd1000)
+                        begin
+                            cnt <= cnt + 1'b1;
+                            if(cnt <= 12'd750)
+                            begin        
+                                if(~left_right) begin
+                                    turn_left <= 1'b1;
+                                    turn_right <= 1'b0;
+                                end
+                                else begin
+                                    turn_left <= 1'b0;
+                                    turn_right <= 1'b1;
+                                end
+                            end
+                            else 
+                            begin
+                                turn_left <= 1'b0;
+                                turn_right <= 1'b0;
+                            end
+                        end
+                        else
+                        begin
+                            finish_turning <= 1'b1; 
+                        end
+                    end           
             end
         end
 endmodule

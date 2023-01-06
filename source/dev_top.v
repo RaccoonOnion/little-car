@@ -55,7 +55,10 @@ module SimulatedDevice(
     output [7:0] seg_en,
     output [7:0] seg_out0,
     output [7:0] seg_out1,
-    output fork_here
+    output fork_here,
+    output reg start_detect,
+    output left_detect_on_1s,
+    output right_detect_off_1s
     );
 
     reg[3:0] state, next_state;
@@ -73,13 +76,14 @@ module SimulatedDevice(
     wire turn_l,turn_r;
     reg just_turned;
     reg cant_forward; // useless
-    wire left_detect_on_1s;
+//    wire left_detect_on_1s;
     wire right_detect_on_1s;
     wire left_detect_off_1s;
-    wire right_detect_off_1s;
+//    wire right_detect_off_1s;
     wire front_detect_on_005s;
     wire front_detect_off_1s;
-    reg start_detect;
+//    reg start_detect;
+    reg turn_around;
 
     
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// more states TODO!!
@@ -90,6 +94,7 @@ module SimulatedDevice(
         begin
             if(power_on_1sec)
             begin
+                turn_around = 1'b0;
                 start_detect = 1'b0;
                 cant_forward = 1'b0;
                 just_turned = 1'b0;
@@ -138,6 +143,7 @@ module SimulatedDevice(
         
         sauto_moving:
         begin
+            turn_around = 1'b0;
             if(detect_fork_disappear)
             begin
                 just_turned = 1'b0;
@@ -171,6 +177,12 @@ module SimulatedDevice(
             else if(turn_right_signal)
             begin
                 left_right = 1'b1;
+                next_state = sauto_turning; 
+            end
+            else if(power_off_signal)
+            begin
+                left_right = 1'b0;
+                turn_around = 1'b1;
                 next_state = sauto_turning; 
             end
             else
@@ -215,6 +227,7 @@ module SimulatedDevice(
             begin
                 start_detect = 1'b0;
                 left_right = 1'b0;
+                turn_around = 1'b1;
                 next_state = sauto_self_turning;                
             end
             else if (~(left_detect_on_1s || left_detect_off_1s) || ~(right_detect_on_1s || right_detect_off_1s))
@@ -394,7 +407,7 @@ module SimulatedDevice(
     detect_fork df1(sys_clk, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
     
-    auto_turning at (clk_ms, rst, state, left_right, turn_l, turn_r, finish_turning);
+    auto_turning at (clk_ms, rst, state, left_right, turn_around, turn_l, turn_r, finish_turning);
     //detect_fork_appear
     edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork_appear) );
     // detect_fork_disappear
