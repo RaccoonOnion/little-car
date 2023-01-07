@@ -54,11 +54,7 @@ module SimulatedDevice(
     output reg reverse_led,
     output [7:0] seg_en,
     output [7:0] seg_out0,
-    output [7:0] seg_out1,
-    output fork_here
-//    output reg start_detect,
-//    output left_detect_on_1s,
-//    output right_detect_off_1s
+    output [7:0] seg_out1
     );
 
     reg[3:0] state, next_state;
@@ -67,24 +63,24 @@ module SimulatedDevice(
     wire reverse_change; // switch reverse without clutch
     wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
     wire flash_led; // flashing led light
+    wire fork_here;
     wire detect_fork_appear; // detecting fork road
     wire detect_fork_disappear;
-    wire detect_front_appear;
-    wire detect_front_disappear;
+
     wire finish_turning; // finish turning signal 
     reg is_turning, left_right;
     wire turn_l,turn_r;
     reg just_turned;
-    reg cant_forward; // useless
+
     wire left_detect_on_1s;
     wire right_detect_on_1s;
     wire left_detect_off_1s;
     wire right_detect_off_1s;
     wire front_detect_on_005s;
     wire front_detect_off_1s;
-    reg start_detect;
-    reg turn_around;
 
+    reg turn_around;
+    reg start_detect;
     
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// more states TODO!!
     
@@ -96,7 +92,6 @@ module SimulatedDevice(
             begin
                 turn_around = 1'b0;
                 start_detect = 1'b0;
-                cant_forward = 1'b0;
                 just_turned = 1'b0;
                 next_state = power_on; 
             end
@@ -154,7 +149,6 @@ module SimulatedDevice(
             end
             else if (~detect_fork_appear && front_detect_on_005s)
             begin
-                cant_forward = 1'b1;
                 next_state = sauto_self_checking;
             end
             else
@@ -244,29 +238,19 @@ module SimulatedDevice(
         
         sauto_self_turning:
         begin
-//            if (detect_front_disappear)
-//            begin
-//                cant_forward = 1'b0;
-//            end
-//            else
-//            begin
-//                cant_forward = cant_forward;
-//            end
             if (finish_turning && front_detect_off_1s)
             begin
                 start_detect = 1'b0;
-                cant_forward = 1'b0;
                 next_state = sauto_moving;
             end
             else
             begin
-                cant_forward = cant_forward;
                 start_detect = 1'b1;
                 next_state = sauto_self_turning;
             end
         end
         
-        default: next_state = next_state; // TODO!!
+        default: next_state = next_state; 
         endcase
     end
 
@@ -402,26 +386,24 @@ module SimulatedDevice(
     seg s(clk_ms, clk_100ms, rst, state, seg_en, seg_out0, seg_out1); //seg 
     clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_100ms(clk_100ms), .clk_s(clk_s)); // clock division
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
-    edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse change
+    
+    edge_detector ed1(.clk(sys_clk), .rst_n(rst), .signal(reverse_signal), .double_edge_detect(reverse_change) );// detect reverse signal change
     flash_led fled1(.clk(clk_ms), .rst_n(rst), .flash_led(flash_led)); // flash_led
-    detect_fork df1(sys_clk, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here);
+    
+    detect_fork df(sys_clk, rst, {front_detector,back_detector,left_detector, right_detector}, fork_here); // detect fork
+    edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork_appear));// detect fork appearing edge
+    edge_detector ed3(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .falling_edge_detect(detect_fork_disappear) );// detect fork disappearing edge
+    
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
     
     auto_turning at (clk_ms, rst, state, left_right, turn_around, turn_l, turn_r, finish_turning);
-    //detect_fork_appear
-    edge_detector ed2(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .raising_edge_detect(detect_fork_appear) );
-    // detect_fork_disappear
-    edge_detector ed3(.clk(sys_clk), .rst_n(rst), .signal(fork_here), .falling_edge_detect(detect_fork_disappear) );
-    //detect_front_appear
-    delayed_edge_detector ed4(.clk(clk_ms), .rst_n(rst), .signal(front_detector), .raising_edge_detect(detect_front_appear) );
-    delayed_edge_detector ed5(.clk(clk_ms), .rst_n(rst), .signal(front_detector), .falling_edge_detect(detect_front_disappear) );
     
-    barrier_detect left_on(clk_20ms, rst, start_detect, left_detector, left_detect_on_1s); // left detect 1 sec
-    barrier_detect right_on(clk_20ms, rst, start_detect, right_detector, right_detect_on_1s); // right detect 1 sec
-    
-    no_barrier_detect left_off(clk_20ms, rst,start_detect, left_detector, left_detect_off_1s); // left detect 1 sec
-    no_barrier_detect right_off(clk_20ms, rst,start_detect, right_detector, right_detect_off_1s); // right detect 1 sec
+    barrier_detecting bd1(clk_20ms, rst, start_detect, left_detector, 1'b1 ,left_detect_on_1s);
+    barrier_detecting bd2(clk_20ms, rst, start_detect, left_detector, 1'b0 ,left_detect_off_1s);
+    barrier_detecting bd3(clk_20ms, rst, start_detect, right_detector, 1'b1 ,right_detect_on_1s);
+    barrier_detecting bd4(clk_20ms, rst, start_detect, right_detector, 1'b0 ,right_detect_off_1s);
+    barrier_detecting bd5(clk_20ms, rst, start_detect, front_detector, 1'b0 ,front_detect_off_1s);
     
     power_on_judge front_judge(clk_ms, rst, front_detector, front_detect_on_005s); // front detect 0.05 sec
-    no_barrier_detect front_off(clk_20ms, rst,start_detect, front_detector, front_detect_off_1s); // right detect 1 sec
+    
 endmodule
