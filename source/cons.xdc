@@ -50,7 +50,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports {seg_out1[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {seg_out1[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {seg_out1[0]}]
 
-set_property IOSTANDARD LVCMOS33 [get_ports {fork_here}]
 set_property IOSTANDARD LVCMOS33 [get_ports {semi_manual_driving_signal}]
 set_property IOSTANDARD LVCMOS33 [get_ports {move_forward_signal}]
 
@@ -112,6 +111,5 @@ set_property PACKAGE_PIN E2 [get_ports {seg_out1[2]}]
 set_property PACKAGE_PIN D2 [get_ports {seg_out1[1]}]
 set_property PACKAGE_PIN H2 [get_ports {seg_out1[0]}]
 
-set_property PACKAGE_PIN K6 [get_ports {fork_here}]
 set_property PACKAGE_PIN U2 [get_ports {semi_manual_driving_signal}]
 set_property PACKAGE_PIN R15 [get_ports {move_forward_signal}]
