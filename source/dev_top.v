@@ -55,10 +55,10 @@ module SimulatedDevice(
     output [7:0] seg_en,
     output [7:0] seg_out0,
     output [7:0] seg_out1,
-    output fork_here,
-    output reg start_detect,
-    output left_detect_on_1s,
-    output right_detect_off_1s
+    output fork_here
+//    output reg start_detect,
+//    output left_detect_on_1s,
+//    output right_detect_off_1s
     );
 
     reg[3:0] state, next_state;
@@ -76,13 +76,13 @@ module SimulatedDevice(
     wire turn_l,turn_r;
     reg just_turned;
     reg cant_forward; // useless
-//    wire left_detect_on_1s;
+    wire left_detect_on_1s;
     wire right_detect_on_1s;
     wire left_detect_off_1s;
-//    wire right_detect_off_1s;
+    wire right_detect_off_1s;
     wire front_detect_on_005s;
     wire front_detect_off_1s;
-//    reg start_detect;
+    reg start_detect;
     reg turn_around;
 
     
