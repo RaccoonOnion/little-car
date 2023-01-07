@@ -94,7 +94,7 @@ module SimulatedDevice(
         end
         else
         begin
-            case(state)
+        case(state)
         power_off: // power off state
         begin
             if(power_on_1sec)
