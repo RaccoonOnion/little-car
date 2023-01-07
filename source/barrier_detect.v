@@ -27,18 +27,18 @@ module barrier_detect(
     input power_on_signal,
     output reg power_on
     );
-    reg[5:0] cnt;
+    reg[10:0] cnt;
     
     always @(posedge clk, negedge rst_n) begin
         if(~rst_n || ~start)
         begin
             power_on <= 1'b0;
-            cnt <= 6'b0;
+            cnt <= 11'b0;
         end
         else begin
             if(power_on_signal) cnt <= cnt + 1'b1;
-            else cnt <= 6'b0;
-            if(cnt >= 6'd49) power_on <= 1'b1;
+            else cnt <= 11'b0;
+            if(cnt >= 11'd49) power_on <= 1'b1;
             else power_on <= 1'b0;
         end
     end
