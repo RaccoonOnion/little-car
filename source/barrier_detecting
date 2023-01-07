@@ -1,0 +1,55 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2023/01/07 21:02:05
+// Design Name: 
+// Module Name: barrier_detecting
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module barrier_detecting(
+    input clk,
+    input rst_n,
+    input start,
+    input signal,
+    input on_off,
+    output reg detected
+    );
+    reg[10:0] cnt;
+    
+    always @(posedge clk, negedge rst_n) begin
+        if(~rst_n || ~start)
+        begin
+            detected <= 1'b0;
+            cnt <= 11'b0;
+        end
+        else if (on_off == 1'b1)
+        begin
+            if(signal) cnt <= cnt + 1'b1;
+            else cnt <= 11'b0;
+            if(cnt >= 11'd49) detected <= 1'b1;
+            else detected <= 1'b0;
+        end
+        else
+        begin
+            if(~signal) cnt <= cnt + 1'b1;
+            else cnt <= 11'b0;
+            if(cnt >= 11'd49) detected <= 1'b1;
+            else detected <= 1'b0;
+        end
+    end
+    
+endmodule
