@@ -85,14 +85,20 @@ module SimulatedDevice(
     parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// more states TODO!!
     
     always @(*) begin //  Next State Combinational Logic TODO!! add power_off
-        case(state)
+        if(~rst)
+        begin
+            next_state = power_off;
+            turn_around = 1'b0;
+            start_detect = 1'b0;
+            just_turned = 1'b0;
+        end
+        else
+        begin
+            case(state)
         power_off: // power off state
         begin
             if(power_on_1sec)
             begin
-                turn_around = 1'b0;
-                start_detect = 1'b0;
-                just_turned = 1'b0;
                 next_state = power_on; 
             end
             else 
@@ -252,6 +258,7 @@ module SimulatedDevice(
         
         default: next_state = next_state; 
         endcase
+        end
     end
 
     always @(posedge sys_clk, negedge rst) // State Register
