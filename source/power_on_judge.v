@@ -23,8 +23,8 @@
 module power_on_judge(
     input clk,
     input rst_n,
-    input power_on_signal,
-    output reg power_on
+    input power_on_signal,  //signal of button
+    output reg power_on    //signal for state change
     );
     reg[5:0] cnt;
     
