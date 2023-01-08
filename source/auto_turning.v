@@ -23,12 +23,12 @@
 module auto_turning(
     input  clk_ms,
     input  rst_n,
-    input [3:0] state,
-    input  left_right,
-    input  turn_around,
-    output reg turn_left,
-    output reg turn_right,
-    output reg finish_turning
+    input [3:0] state,                //current state
+    input  left_right,                 //indicate the turning direction
+    input  turn_around,          //indicate whether the car should turn around
+    output reg turn_left,         //turn left signal
+    output reg turn_right,       //turn right signal
+    output reg finish_turning //indicate whether the car finishes turning
     );
     reg[11:0] cnt;
     reg is_turning;
