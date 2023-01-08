@@ -21,9 +21,9 @@
 
 
 module flash_led(
-    input clk,
+    input clk,    //1ms peroid
     input rst_n,
-    output reg flash_led
+    output reg flash_led  //the led signal
     );
     reg [6:0] cnt;
     always @(posedge clk, negedge rst_n) begin
