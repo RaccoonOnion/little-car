@@ -21,9 +21,9 @@
 
 
 module clk_div(
-    input  clk,// 100MHz
-    input  rst_n,
-    output reg  clk_ms, clk_20ms, clk_100ms, clk_s
+    input  clk,       //system clk
+    input  rst_n, 
+    output reg  clk_ms, clk_20ms, clk_100ms, clk_s  //clk of different periods
     );
     parameter period_ms = 100000, period_20ms = 2000000, period_100ms = 10000000, period_s = 100000000;  
      
