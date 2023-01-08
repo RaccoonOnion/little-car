@@ -23,8 +23,8 @@
 module detect_fork(
     input clk,
     input rst_n,
-    input [3:0] detector_signal,
-    output reg detect_fork
+    input [3:0] detector_signal,  //the four direction dector signal
+    output reg detect_fork         //judge whether there is a fork
     );
      always @(posedge clk, negedge rst_n) 
      begin
