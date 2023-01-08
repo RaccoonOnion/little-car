@@ -24,10 +24,10 @@ module seg(
     input clk_ms,
     input clk_100ms,
     input rst,
-    input [3:0] state,
-    output reg [7:0] seg_en,
-    output reg [7:0] seg_out0,
-    output reg [7:0] seg_out1
+    input [3:0] state,                 //current state
+    output reg [7:0] seg_en,     //bit selection signal
+    output reg [7:0] seg_out0,  //left segment selection signal
+    output reg [7:0] seg_out1  //right segment selection signal
     );
         
     reg [31:0] data;
