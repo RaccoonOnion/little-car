@@ -23,9 +23,9 @@
 module barrier_detecting(
     input clk,
     input rst_n,
-    input start,
-    input signal,
-    input on_off,
+    input start,    //start decting
+    input signal, //signal to be dected
+    input on_off, //indicate whether the barrier should or should not be there
     output reg detected
     );
     reg[10:0] cnt;
