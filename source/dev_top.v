@@ -60,31 +60,30 @@ module SimulatedDevice(
     reg[3:0] state, next_state;
     reg turn_left, turn_right, move_forward, move_backward, place_barrier, destroy_barrier;
     wire power_on_1sec; // power on for 1s
-    wire reverse_change; // switch reverse without clutch
+    wire reverse_change; // switch reverse
     wire clk_ms, clk_20ms, clk_100ms, clk_s; // clock division
     wire flash_led; // flashing led light
-    wire fork_here;
-    wire detect_fork_appear; // detecting fork road
-    wire detect_fork_disappear;
-
+    wire fork_here; // fork detecting signal
+    wire detect_fork_appear; // detecting fork appearance
+    wire detect_fork_disappear; // detecting fork disappearing
     wire finish_turning; // finish turning signal 
-    reg is_turning, left_right;
-    wire turn_l,turn_r;
-    reg just_turned;
-
+    reg is_turning, left_right; // is turning signal and turning direction signal
+    wire turn_l,turn_r; // left, right turning signal
+    reg just_turned; // state control signal
+    // barrier detection signals
     wire left_detect_on_1s;
     wire right_detect_on_1s;
     wire left_detect_off_1s;
     wire right_detect_off_1s;
     wire front_detect_on_005s;
     wire front_detect_off_1s;
-
+    // more turning control signals
     reg turn_around;
     reg start_detect;
     
-    parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// more states TODO!!
+    parameter power_off = 4'b0000, power_on = 4'b0001, not_starting = 4'b0010, starting = 4'b0011, moving = 4'b0100, sauto_moving = 4'b0101, sauto_waiting = 4'b0110, sauto_turning = 4'b0111, sauto_self_checking = 4'b1000, sauto_self_turning = 4'b1001;// state parameters
     
-    always @(*) begin //  Next State Combinational Logic TODO!! add power_off
+    always @(*) begin //  Next State Combinational Logic
         if(~rst)
         begin
             next_state = power_off;
@@ -142,7 +141,7 @@ module SimulatedDevice(
             end
         end
         
-        sauto_moving:
+        sauto_moving: // semi-auto moving state
         begin
             turn_around = 1'b0;
             if(detect_fork_disappear)
@@ -163,7 +162,7 @@ module SimulatedDevice(
             end
         end
         
-        sauto_waiting:
+        sauto_waiting: // semi-auto waiting state
         begin
             if (move_forward_signal)
             begin
@@ -191,7 +190,7 @@ module SimulatedDevice(
             end
         end
         
-        sauto_turning:
+        sauto_turning: // semi-auto turning state
         begin       
             if (finish_turning)
             begin
@@ -204,7 +203,7 @@ module SimulatedDevice(
             end
         end
         
-        sauto_self_checking:
+        sauto_self_checking: // semi-auto self checking state
         begin
             if (left_detect_off_1s && right_detect_on_1s)
             begin
@@ -242,7 +241,7 @@ module SimulatedDevice(
             end
         end
         
-        sauto_self_turning:
+        sauto_self_turning: // semi-auto self turning state
         begin
             if (finish_turning && front_detect_off_1s)
             begin
@@ -266,8 +265,6 @@ module SimulatedDevice(
         if(~rst)
         begin
             state <= power_off;
-            // output set to zero TODO!!
-
             turn_left <= 1'b0;
             turn_right <= 1'b0;
             move_forward <= 1'b0;
@@ -277,18 +274,14 @@ module SimulatedDevice(
         end
         else 
         begin
-            state <= next_state;
-            
-//            if(state == sauto_turning) is_turning <= 1'b1;
-//            else is_turning <= 1'b0;
-            
+            state <= next_state;  
+            // case selection for states   
             case(state)
-            // combine
             power_on: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
             power_off: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
             not_starting: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
             starting: {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= 8'b0;
-           
+            
             moving: 
             begin
             if (!reverse_signal)
@@ -296,7 +289,7 @@ module SimulatedDevice(
             else
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {turn_left_signal,turn_right_signal,1'b0,1'b1,place_barrier_signal,destroy_barrier_signal}; 
             end
-            
+
             sauto_moving:
             begin
                 {turn_left,turn_right,move_forward,move_backward,place_barrier,destroy_barrier} <= {1'b0,1'b0,1'b1,1'b0,1'b0,1'b0};
@@ -324,19 +317,23 @@ module SimulatedDevice(
     always@(*) // Output Combinational Logic
     begin
         state_led = state;
+        // case selection for states
         case(state)
+        
         not_starting: 
         begin
             left_turn_led = 1'b1; 
             right_turn_led = 1'b1;
             reverse_led = 1'b0;
         end
+        
         starting:
         begin
             left_turn_led = 1'b0; 
             right_turn_led = 1'b0;
             reverse_led = reverse_signal;
         end
+        
         moving:
         begin
             if (turn_left_signal && ~turn_right_signal)
@@ -356,18 +353,21 @@ module SimulatedDevice(
             end         
             reverse_led = reverse_signal;
         end
+        
         sauto_moving:
         begin
             left_turn_led = 1'b0;
             right_turn_led = 1'b0;
             reverse_led = 1'b0;
         end
+        
         sauto_waiting:
         begin
             left_turn_led = flash_led;
             right_turn_led = flash_led;
             reverse_led = flash_led;
         end
+        
         sauto_turning:
         begin
         end
@@ -381,15 +381,15 @@ module SimulatedDevice(
         
     end
     
-    
+    // uart
     wire [7:0] in = {2'b10, destroy_barrier, place_barrier, turn_right, turn_left, move_backward, move_forward};
-
     wire [7:0] rec;
     assign front_detector = rec[0];
     assign left_detector = rec[1];
     assign right_detector = rec[2];
     assign back_detector = rec[3];
 
+    // sub-modules
     seg s(clk_ms, clk_100ms, rst, state, seg_en, seg_out0, seg_out1); //seg 
     clk_div cd( .clk(sys_clk), .rst_n(rst), .clk_ms(clk_ms), .clk_20ms(clk_20ms), .clk_100ms(clk_100ms), .clk_s(clk_s)); // clock division
     power_on_judge poj(clk_20ms, rst, power_on_signal, power_on_1sec); // power on 1 sec
@@ -403,8 +403,9 @@ module SimulatedDevice(
     
     uart_top md(.clk(sys_clk), .rst(0), .data_in(in), .data_rec(rec), .rxd(rx), .txd(tx)); // uart top
     
-    auto_turning at (clk_ms, rst, state, left_right, turn_around, turn_l, turn_r, finish_turning);
+    auto_turning at (clk_ms, rst, state, left_right, turn_around, turn_l, turn_r, finish_turning); // auto-turning
     
+    // barrier detection
     barrier_detecting bd1(clk_20ms, rst, start_detect, left_detector, 1'b1 ,left_detect_on_1s);
     barrier_detecting bd2(clk_20ms, rst, start_detect, left_detector, 1'b0 ,left_detect_off_1s);
     barrier_detecting bd3(clk_20ms, rst, start_detect, right_detector, 1'b1 ,right_detect_on_1s);
