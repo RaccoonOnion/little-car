@@ -23,9 +23,9 @@
 module edge_detector(
     input clk,
     input rst_n,
-    input signal,
-    output raising_edge_detect, falling_edge_detect, 
-    output double_edge_detect
+    input signal,      //signal to be dected
+    output raising_edge_detect, falling_edge_detect, //raising edge and falling edge of the signal
+    output double_edge_detect //two edges of the signal
     );
 
 reg q0, q1;
