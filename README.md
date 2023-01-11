@@ -12,11 +12,9 @@ Mid-DDL: **12.15** Final DDL: **1.8**
 - [x] Structure Design
 - [x] Coding: Global State (20%)
 - [x] Coding: Manual Driving (50%)
-- [ ] Coding: Semi-Auto Driving (30%)
-- [ ] Bonus: Auto Driving (+20%)
-- [ ] Bonus: VGA (+20%)
-- [ ] Report
-- [ ] Demo video
+- [x] Coding: Semi-Auto Driving (30%)
+- [x] Report
+- [x] Demo video
 
 ## 2. Demand Analysis
 
@@ -43,6 +41,3 @@ Mid-DDL: **12.15** Final DDL: **1.8**
 - use **time** to estimate 90 degrees, provide a 50Hz clk
 - add a cooldown between turning and going straight, cuz the car takes a short time to calibrate the orientation
 - **the value of 4 detectors may not change at the same time (time difference of about 40ms)**  
-- 死路，只有后面空
-
-### (3) Bonus
