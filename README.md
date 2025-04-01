@@ -1,43 +1,64 @@
-# little-car
 
-This is the final porject for CS207 Digital Logic
-Authors: Yunxiang Yan, Zixu Huang
+# Little Car Project
 
-## 1. Project Timeline
-Mid-DDL: **12.15** Final DDL: **1.8**
+This repository contains the final project for CS207 Digital Logic, developed by Yunxiang Yan and Zixu Huang.
 
-- [x] Play with demo
-- [x] Demand Analysis
-- [x] Functionality Design
-- [x] Structure Design
-- [x] Coding: Global State (20%)
-- [x] Coding: Manual Driving (50%)
-- [x] Coding: Semi-Auto Driving (30%)
-- [x] Report
-- [x] Demo video
+## Project Timeline
 
-## 2. Demand Analysis
+- **Mid-Deadline:** December 15
+- **Final Deadline:** January 8
 
-### (1) Basic
-- Power-on and Power-off (button)
-- Throttle (switch)
-- Clutch (switch)
-- Brake (switch) : If we turn on brake and throttle at the same time, brake should work and throttle should not work
-- Reverse gear shift (switch) : When switching this switch, the clutch must keep turning on
-- Turn left and turn right (button) : If no one is pressed or both are pressed, the car should go straight.
-- Car Operation (to UART)
-- Turn Light (LED)
-- Mileage record (7 seg) : the mileage should reset to 0 when power-off
-### (2) Advanced - Semi-Auto Driving (30%)
+### Milestones:
 
-- 3 states: moving, turning, wait-for-command
-- the car is in moving state initially
-- when a fork is detected by the four detectors, switch to wait-for-command
-- we can send a command from: straight, left and right
-- **the command buttons are inactive in moving/turning state**
-- **turning state should automatically switch into moving staten when the car turns 90 degrees**
+- Play with demo
+- Demand Analysis
+- Functionality Design
+- Structure Design
+- Coding:
+  - Global State (20%)
+  - Manual Driving (50%)
+  - Semi-Auto Driving (30%)
+- Report
+- Demo video
 
----
-- use **time** to estimate 90 degrees, provide a 50Hz clk
-- add a cooldown between turning and going straight, cuz the car takes a short time to calibrate the orientation
-- **the value of 4 detectors may not change at the same time (time difference of about 40ms)**  
+## Demand Analysis
+
+### Basic Features:
+
+- **Power-on and Power-off:** Controlled via a button.
+- **Throttle:** Operated by a switch.
+- **Clutch:** Operated by a switch.
+- **Brake:** Operated by a switch. If both brake and throttle are activated simultaneously, the brake takes precedence.
+- **Reverse Gear Shift:** Controlled by a switch. Activation requires the clutch to be engaged.
+- **Steering:**
+  - **Turn Left and Turn Right:** Controlled by buttons. If neither or both buttons are pressed, the car moves straight.
+- **Car Operation Output:** Data sent to UART.
+- **Turn Indicators:** Represented by LEDs.
+- **Mileage Record:** Displayed on a 7-segment display. Resets to 0 when powered off.
+
+## Repository Contents
+
+- `source/`: Contains the source code for the project.
+- `.gitignore`: Specifies files and directories to be ignored by Git.
+- `EGo1_user_manual.pdf`: User manual for the EGo1 platform.
+- `LICENSE`: The MIT License for this project.
+- `README.md`: This file.
+- `Report.pdf`: Detailed project report.
+- `code.zip`: Compressed archive of the source code.
+- `submit.sh`: Script for submitting the project.
+
+## Getting Started
+
+To get a local copy up and running, follow these steps:
+
+```bash
+git clone https://github.com/RaccoonOnion/little-car.git
+cd little-car
+unzip code.zip -d source
+```
+
+Refer to the `EGo1_user_manual.pdf` for instructions on building and programming the project onto the hardware.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
